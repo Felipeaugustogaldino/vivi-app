@@ -1,0 +1,14 @@
+{
+  "name": "Vivi — Sua Assistente Pessoal",
+  "short_name": "Vivi",
+  "description": "Assistente pessoal com tarefas, finanças, metas e lembretes inteligentes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F9FA",
+  "theme_color": "#1D9E75",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
