@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vivi — Versão 3.0</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css"/>
+<style>
+  :root{--green:#1D9E75;--bg:#F8F9FA;--surface:#FFFFFF;--text:#111827;--radius:12px;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:sans-serif;background:var(--bg);color:var(--text);display:flex;justify-content:center}
+  #root{width:100%;max-width:480px;min-height:100vh;background:var(--surface);display:flex;flex-direction:column;box-shadow:0 0 20px rgba(0,0,0,0.1)}
+  .topbar{padding:15px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px}
+  .avatar{width:40px;height:40px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:white}
+  .chat-msgs{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px;background:#f9f9f9}
+  .msg{max-width:80%;padding:10px;border-radius:10px;font-size:14px}
+  .msg-bot{background:#eee;align-self:flex-start}
+  .msg-user{background:var(--green);color:white;align-self:flex-end}
+  .input-area{padding:15px;border-top:1px solid #eee;display:flex;gap:10px}
+  input{flex:1;padding:10px;border:1px solid #ddd;border-radius:20px;outline:none}
+  button{padding:10px 20px;background:var(--green);color:white;border:none;border-radius:20px;cursor:pointer}
+  .setup{position:fixed;inset:0;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;z-index:100}
+  #debug{font-size:11px;color:red;padding:10px;background:#fff0f0;display:none;margin:10px;border-radius:5px;word-break:break-all}
+</style>
+</head>
+<body>
+<div id="root">
+  <div id="setup" class="setup">
+    <h2>Bem-vinda à Vivi V3!</h2>
+    <p>Cole sua chave Anthropic:</p>
+    <input type="password" id="keyInp" style="width:100%;margin:15px 0" placeholder="sk-ant-...">
+    <button onclick="saveKey()">Começar</button>
+  </div>
+  <div class="topbar">
+    <div class="avatar">V</div>
+    <div><strong>Vivi</strong><br><small style="color:green">Versão Corrigida 3.0</small></div>
+  </div>
+  <div class="chat-msgs" id="msgs">
+    <div class="msg msg-bot">Oi! Esta é a versão 3.0. Se você está vendo isso, o arquivo atualizou! Como posso ajudar?</div>
+  </div>
+  <div id="debug"></div>
+  <div class="input-area">
+    <input type="text" id="inp" placeholder="Digite aqui..." onkeypress="if(event.key==='Enter')send()">
+    <button onclick="send()">Enviar</button>
+  </div>
+</div>
+<script>
+  let key = localStorage.getItem('vivi_key_v3') || '';
+  if(key) document.getElementById('setup').style.display='none';
+  
+  function saveKey(){
+    const v = document.getElementById('keyInp').value.trim();
+    if(v.startsWith('sk-ant')){
+      key = v; localStorage.setItem('vivi_key_v3', key);
+      document.getElementById('setup').style.display='none';
+    } else alert('Chave inválida');
+  }
+
+  async function send(){
+    const i = document.getElementById('inp');
+    const m = document.getElementById('msgs');
+    const d = document.getElementById('debug');
+    const txt = i.value.trim();
+    if(!txt) return;
+    i.value = '';
+    
+    const uMsg = document.createElement('div');
+    uMsg.className = 'msg msg-user'; uMsg.innerText = txt;
+    m.appendChild(uMsg);
+    
+    d.style.display = 'none';
+    try {
+      const res = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages'), {
+        method: 'POST',
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1024,
+          messages: [{role: 'user', content: txt}]
+        })
+      });
+      const data = await res.json();
+      const bMsg = document.createElement('div');
+      bMsg.className = 'msg msg-bot';
+      if(data.content) bMsg.innerText = data.content[0].text;
+      else {
+        bMsg.innerText = 'Erro na resposta.';
+        d.innerText = JSON.stringify(data);
+        d.style.display = 'block';
+      }
+      m.appendChild(bMsg);
+    } catch(e) {
+      d.innerText = 'ERRO DE CONEXÃO: ' + e.message;
+      d.style.display = 'block';
+    }
+    m.scrollTop = m.scrollHeight;
+  }
+</script>
+</body>
+</html>
